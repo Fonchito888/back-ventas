@@ -89,7 +89,7 @@ const deleteventa = async (req, res) => {
     // Busca la venta al contado por ID
     const ventaContado = await VentaContadoModel.findByProVCId(id)
     if (!ventaContado) {
-      return res.status(404).json({ error: 'Venta no encontrada.' })
+      return res.status(404).json({ error: 'Venta de contadp no encontrada.' })
     }
 
     // Elimina la venta al contado
