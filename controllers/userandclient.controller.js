@@ -1,3 +1,4 @@
+/* eslint-disable padded-blocks */
 import { UserandClientModel } from '../models/usersandclient.model.js'
 import bcryptjs from 'bcryptjs'
 
@@ -67,6 +68,10 @@ const updateuser = async (req, res) => {
     // Verifica que los campos obligatorios estén presentes
     if (!name || !lastname || !telefono || !identificacion || !direccion) {
       return res.status(400).json({ error: 'Faltan campos obligatorios: nombre, apellido, contraseña, teléfono, identificación y dirección.' })
+    }
+
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'El ID del usuario no es válido.' })
     }
 
     // Verifica que el correo electrónico no sea demasiado largo
@@ -147,11 +152,22 @@ const asigrol = async (req, res) => {
   if (!userId || !roleId) {
     return res.status(400).json({ error: 'Faltan campos obligatorios: userId y roleId.' })
   }
+  if (isNaN(userId)) {
+    return res.status(400).json({ error: 'El ID del usuario no es válido.' })
+  }
+  if (isNaN(roleId)) {
+    return res.status(400).json({ error: 'El ID del rol no es válido.' })
+  }
 
   // Verifica si el usuario existe
   const user = await UserandClientModel.findOneUserId(userId)
   if (!user) {
     return res.status(404).json({ error: 'Usuario no encontrado.' })
+  }
+  // Verifica si el usuario existe
+  const rol = await UserandClientModel.findOneRolId(roleId)
+  if (!rol) {
+    return res.status(404).json({ error: 'Rol no encontrado.' })
   }
 
   const existingrolanduser = await UserandClientModel.RoleasigUserOne(userId, roleId)
@@ -200,12 +216,102 @@ const profile = async (req, res) => {
     return res.status(500).json({ error: error.message })
   }
 }
+// Tabla que me devuelve todos los usuario con rol de cliente
+const tableclients = async (req, res) => {
+  try {
+    const result = await UserandClientModel.tableclients()
+    const clients = result.rows
+
+    // Mapeo y Formateo de datos para devolverlos como una lista de objetos
+    const formattedClients = clients.map(client => ({
+      id: client.usu_id,
+      identificacion: client.usu_identificacion,
+      name: client.usu_nombre,
+      lastname: client.usu_apellido,
+      user: client.usu_usuario,
+      direccion: client.usu_direccion,
+      telefono: client.usu_telefono,
+      estado: client.usu_estado,
+      idrol: client.rol_id,
+      rol_nombre: client.rol_nombre
+    }))
+
+    // Devuelve la tabla clientes
+    return res.json(formattedClients)
+  } catch (error) {
+    // Imprimir el error en la consola para depuración
+    console.error(error.message)
+
+    // En caso de error, se devuelve un estado 500 con el mensaje del error
+    return res.status(500).json({ error: error.message })
+  }
+}
+
+// Tabla que me devuelve todos los usuario con rol de admin
+const tableadmin = async (req, res) => {
+  try {
+    const result = await UserandClientModel.tableadmin()
+    const admins = result.rows
+
+    // Mapeo y Formateo de datos para devolverlos como una lista de objetos
+    const formattedAdmin = admins.map(admin => ({
+      id: admin.usu_id,
+      identificacion: admin.usu_identificacion,
+      name: admin.usu_nombre,
+      lastname: admin.usu_apellido,
+      user: admin.usu_usuario,
+      direccion: admin.usu_direccion,
+      telefono: admin.usu_telefono,
+      estado: admin.usu_estado,
+      idrol: admin.rol_id,
+      rol_nombre: admin.rol_nombre
+    }))
+
+    // Devuelve la tabla admin
+    return res.json(formattedAdmin)
+  } catch (error) {
+    // Imprimir el error en la consola para depuración
+    console.error(error.message)
+
+    // En caso de error, se devuelve un estado 500 con el mensaje del error
+    return res.status(500).json({ error: error.message })
+  }
+}
+
+const inactiveUsers = async (req, res) => {
+  try {
+    const { state, id } = req.body
+
+    // Verifica que los campos obligatorios estén presentes
+    if (!id || !state) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios: id y estado' })
+    }
+
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'El ID del usuario no es válido.' })
+    }
+
+    // Verifica si el usuario existe
+    const user = await UserandClientModel.findOneUserId(id)
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado.' })
+    }
+
+    return res.json('Estado cambiado con exito')
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: error.message })
+  }
+}
 
 export const UserandClientController = {
   register,
   updateuser,
   unrelatedrol,
   asigrol,
-  profile
+  profile,
+  tableclients,
+  tableadmin,
+  inactiveUsers
 
 }

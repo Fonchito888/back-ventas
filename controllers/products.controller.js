@@ -11,6 +11,12 @@ const register = async (req, res) => {
     if (!marca || !reference || !productname || !date || !price || !priceventa) {
       return res.status(400).json({ error: 'Faltan campos obligatorios: marca, referencia, nombre del producto, fecha, precio, precio de venta' })
     }
+    if (isNaN(price)) {
+      return res.status(400).json({ error: 'El precio debe ser valor numerico.' })
+    }
+    if (isNaN(priceventa)) {
+      return res.status(400).json({ error: 'El precio de venta debe ser valor numerico.' })
+    }
 
     // Busca si la referencia ya existe en la base de datos
     const referencebyid = await ProductsModel.findOnebyReference(reference)
@@ -64,6 +70,12 @@ const updateproduct = async (req, res) => {
     if (!marca || !reference || !productname || !date || !price || !priceventa) {
       return res.status(400).json({ error: 'Faltan campos obligatorios: marca, referencia, nombre del producto, fecha, precio, precio de venta' })
     }
+    if (isNaN(price)) {
+      return res.status(400).json({ error: 'El precio debe ser valor numerico.' })
+    }
+    if (isNaN(priceventa)) {
+      return res.status(400).json({ error: 'El precio de venta debe ser valor numerico.' })
+    }
 
     // Busca el producto actual para obtener su id
     const Productupdate = await ProductsModel.findById(id)
@@ -113,7 +125,35 @@ const updateproduct = async (req, res) => {
   }
 }
 
+// Tabla que me devuelve todos los productos
+const tableproducts = async (req, res) => {
+  try {
+    const result = await ProductsModel.tableproducts()
+    const product = result.rows
+
+    const formattedProduct = product.map(pro => ({
+      id: pro.pro_id,
+      marca: pro.pro_marca,
+      reference: pro.pro_referencia,
+      productname: pro.pro_nombreproducto,
+      date: pro.pro_fecha,
+      price: pro.pro_precio,
+      priceventa: pro.pro_precioventa,
+      state: pro.pro_estado,
+      profit: pro.pro_ganancia,
+      utility: pro.pro_utilidad
+    }))
+
+    return res.status(200).json(formattedProduct)
+  } catch (error) {
+    console.error(error)
+    // Maneja el error y devuelve una respuesta adecuada
+    return res.status(500).json({ error: error.message })
+  }
+}
+
 export const ProductsController = {
   register,
-  updateproduct
+  updateproduct,
+  tableproducts
 }

@@ -97,6 +97,20 @@ const findOneUserId = async (userId) => {
 }
 
 /**
+ * Busca un Rol en la base de datos por su ID.
+ * @param {number} rolId - ID del usuario.
+ * @returns {Promise<Object|null>} - Datos del usuario encontrado o null si no existe.
+ */
+const findOneRolId = async (rolId) => {
+  const query = {
+    text: 'SELECT * FROM ROLES WHERE ROL_ID = $1',
+    values: [rolId]
+  }
+
+  const { rows } = await db.query(query)
+  return rows[0] || null
+}
+/**
  * Busca un usuario en la base de datos por su ID.
  * @param {number} id - ID del usuario.
  * @returns {Promise<Object|null>} - Datos del usuario encontrado o null si no existe.
@@ -148,8 +162,7 @@ const RoleasigUserOne = async (userId, roleId) => {
  */
 const UnrelatedRolesandUser = async (userId) => {
   const query = {
-    text: `
-            SELECT * 
+    text: ` SELECT * 
             FROM ROLES 
             WHERE ROL_ID NOT IN (
                 SELECT USR_ROL_ID 
@@ -219,12 +232,61 @@ const update = async ({ name, lastname, user, direccion, telefono, identificacio
     // Devuelve los nuevos datos del usuario
     return { name, lastname, user, direccion, telefono, identificacion }
   } catch (error) {
-    // Si hay un error, revierte la transacción
+    // Si hay un error, revierte la transacSión
     await client.query('ROLLBACK')
     throw error
   } finally {
     client.release() // Libera el cliente de la conexión
   }
+}
+
+/**
+ * Obtiene todos los clientes de la base de datos.
+ * @returns {Promise<Array>} - Lista de clientes que tienen el rol de 'cliente'.
+ */
+const tableclients = async () => {
+  const query = {
+    text: `SELECT *
+          FROM USUARIO
+          JOIN ROLESUSUARIO ON USU_ID = USR_USU_ID
+          JOIN ROLES ON USR_ROL_ID = ROL_ID
+          WHERE ROL_NOMBRE = 'cliente'`
+  }
+  const rows = await db.query(query)
+  return rows // Devuelve el array de clientes
+}
+
+/**
+ * Obtiene todos los administradores de la base de datos.
+ * @returns {Promise<Array>} - Lista de administradores que tienen el rol de 'administrador'.
+ */
+const tableadmin = async () => {
+  const query = {
+    text: `SELECT *
+          FROM USUARIO
+          JOIN ROLESUSUARIO ON USU_ID = USR_USU_ID
+          JOIN ROLES ON USR_ROL_ID = ROL_ID
+          WHERE ROL_NOMBRE = 'administrador'`
+  }
+  const rows = await db.query(query)
+  return rows // Devuelve el array de administradores
+}
+
+/**
+ * Actualiza el estado de un usuario en la base de datos.
+ * @param {Object} params - Parámetros para la actualización.
+ * @param {string} params.state - Nuevo estado del usuario (por ejemplo, 'activo' o 'inactivo').
+ * @param {number} params.id - ID del usuario a actualizar.
+ * @returns {Promise<void>} - Una promesa que se resuelve cuando se completa la actualización.
+ */
+const inactiveUsers = async ({ state, id }) => {
+  const query = {
+    text: `UPDATE USUARIO 
+             SET USU_ESTADO = $1 
+             WHERE USU_ID = $2`,
+    values: [state, id]
+  }
+  await db.query(query)
 }
 
 export const UserandClientModel = {
@@ -236,6 +298,11 @@ export const UserandClientModel = {
   RoleasigUserOne,
   UnrelatedRolesandUser,
   findOneUserId,
+  findOneRolId,
   findOneIdentificacion,
-  update
+  update,
+  tableclients,
+  tableadmin,
+  inactiveUsers
+
 }

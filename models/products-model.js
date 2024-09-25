@@ -75,9 +75,23 @@ const update = async ({ marca, reference, productname, date, price, priceventa, 
   return rows[0]
 }
 
+/**
+ * Obtiene todos los productos de la base de datos.
+ * @returns {Promise<Array>} - Lista de productos
+ */
+const tableproducts = async () => {
+  const query = {
+    text: 'SELECT * FROM PRODUCTOS'
+  }
+  const rows = await db.query(query)
+  return rows
+}
+
 export const ProductsModel = {
   create,
   findOnebyReference,
   update,
-  findById
+  findById,
+  tableproducts
+
 }
