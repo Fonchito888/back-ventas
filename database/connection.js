@@ -14,7 +14,7 @@ export const db = new Pool({
 
 try {
   await db.query('SELECT NOW()')
-  console.log('Database connection established successfully')
+  console.log('Database connection dev successfully')
 } catch (error) {
   console.error('Error connecting to the database:', error)
 }
