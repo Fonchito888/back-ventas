@@ -8,7 +8,7 @@ export const db = new Pool({
   allowExitOnIdle: true,
   connectionString, // Coma agregada aquí
   ssl: {
-    rejectUnauthorized: false // Para desarrollo, cambiar a true en producción
+    rejectUnauthorized: true // Para desarrollo, cambiar a true en producción
   }
 })
 
