@@ -13,11 +13,11 @@ app.use('/ventas', verifyToken, Indexroute)
 
 const PORT = process.env.PORT || 3000
 
-app.listen(PORT, () => console.log('Server running on port ' + PORT))
+app.listen(PORT, () => console.log('Server running port ' + PORT))
 
 app.get('/', (req, res) => {
   // Envía un "OK" como respuesta
-  res.send('OK')
+  res.send('OK DEV')
 })
 app.post('/login', async (req, res) => {
   try {
