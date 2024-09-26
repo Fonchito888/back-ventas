@@ -1,5 +1,11 @@
 import { ProductsModel } from '../models/products-model.js'
 import { UserandClientModel } from '../models/usersandclient.model.js'
+import moment from 'moment'
+
+// Función para validar que la fecha proporcionada sea válida en formato ISO 8601.
+const isValidDate = (date) => {
+  return moment(date, moment.ISO_8601, true).isValid()
+}
 
 // Función para registrar un nuevo producto
 const register = async (req, res) => {
@@ -24,6 +30,11 @@ const register = async (req, res) => {
     // Si la referencia ya existe, devuelve un error de conflicto
     if (referencebyid) {
       return res.status(409).json({ error: 'La referencia ya existe' })
+    }
+
+    // Valida que las fechas proporcionadas sean correctas en formato ISO 8601.
+    if (!isValidDate(date)) {
+      return res.status(400).json({ error: 'La fecha no tiene un formato válido.' })
     }
 
     // Obtiene el ID del usuario desde la solicitud
@@ -66,6 +77,10 @@ const updateproduct = async (req, res) => {
     const { id } = req.params
     const { marca, reference, productname, date, price, priceventa } = req.body
 
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'El ID del producto no es válido.' })
+    }
+
     // Verifica que todos los campos obligatorios estén presentes
     if (!marca || !reference || !productname || !date || !price || !priceventa) {
       return res.status(400).json({ error: 'Faltan campos obligatorios: marca, referencia, nombre del producto, fecha, precio, precio de venta' })
@@ -95,6 +110,11 @@ const updateproduct = async (req, res) => {
     const productentregado = await ProductsModel.findById(id)
     if (productentregado.pro_estado === 'E') {
       return res.status(409).json({ error: 'El producto ya ha sido entregado' })
+    }
+
+    // Valida que las fechas proporcionadas sean correctas en formato ISO 8601.
+    if (!isValidDate(date)) {
+      return res.status(400).json({ error: 'La fecha no tiene un formato válido.' })
     }
 
     // Actualiza el producto en la base de datos
