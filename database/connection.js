@@ -6,10 +6,10 @@ const connectionString = process.env.DATABASE_URL
 
 export const db = new Pool({
   allowExitOnIdle: true,
-  connectionString
-  // ssl: {
-  //     rejectUnauthorized: false // Para desarrollo, cambiar a true en producción
-  // }
+  connectionString, // Coma agregada aquí
+  ssl: {
+    rejectUnauthorized: true // Para desarrollo, cambiar a true en producción
+  }
 })
 
 try {
