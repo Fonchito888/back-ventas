@@ -1,6 +1,6 @@
 import { VentaContadoModel } from '../models/ventaContado.model.js'
 import { UserandClientModel } from '../models/usersandclient.model.js'
-import { ProductsModel } from '../models/products-model.js'
+import { ProductsModel } from '../models/products.model.js'
 import moment from 'moment'
 
 // Función para validar que la fecha proporcionada sea válida en formato ISO 8601.
@@ -21,6 +21,9 @@ const register = async (req, res) => {
     // Verifica que la tarjeta sea un numero
     if (isNaN(cardnum)) {
       return res.status(400).json({ error: 'El número de tarjeta no es válido.' })
+    }
+    if (cardnum < 0) {
+      return res.status(409).json({ error: 'numero de carta no puede ser negativo' })
     }
 
     // Verifica que el ID del cliente sea un número
@@ -43,6 +46,11 @@ const register = async (req, res) => {
     const product = await ProductsModel.findById(IdPro)
     if (!product) {
       return res.status(404).json({ error: 'Producto no encontrado.' })
+    }
+    // Verifica si el usuario esta inactivo
+    const clientinactivo = await UserandClientModel.findById(IdCli)
+    if (clientinactivo.usu_estado === 'inactivo') {
+      return res.status(409).json({ error: 'El usuario está inactivo' })
     }
 
     // Valida que las fechas proporcionadas sean correctas en formato ISO 8601.
@@ -76,14 +84,8 @@ const register = async (req, res) => {
       IdAdm: adm.usu_id
     })
 
-    // Prepara la respuesta con los detalles de la nueva venta
-    const VntCont = {
-      cardnum: newVentacontado.cardnum,
-      date: newVentacontado.date
-    }
-
     // Devuelve la respuesta con estado 201 (creado)
-    res.status(201).json(VntCont)
+    res.status(201).json(newVentacontado)
   } catch (error) {
     console.error(error) // Registra el error en la consola
     // Devuelve un error interno si ocurre un problema
@@ -104,7 +106,7 @@ const deleteventa = async (req, res) => {
     // Busca la venta al contado por ID
     const ventaContado = await VentaContadoModel.findByProVCId(id)
     if (!ventaContado) {
-      return res.status(404).json({ error: 'Venta de contado no encontrada.' })
+      return res.status(404).json({ error: 'Venta de contado por producto no encontrada.' })
     }
 
     // Elimina la venta al contado
@@ -144,6 +146,10 @@ const updatevntcnt = async (req, res) => {
       return res.status(400).json({ error: 'El número de tarjeta no es válido.' })
     }
 
+    if (cardnum < 0) {
+      return res.status(409).json({ error: 'numero de carta no puede ser negativo' })
+    }
+
     // Verifica que el ID del cliente sea un número
     if (isNaN(IdCli)) {
       return res.status(400).json({ error: 'El ID del usuario no es válido.' })
@@ -176,6 +182,12 @@ const updatevntcnt = async (req, res) => {
     const product = await ProductsModel.findById(IdPro)
     if (!product) {
       return res.status(404).json({ error: 'Producto no encontrado.' })
+    }
+
+    // Verifica si el usuario esta inactivo
+    const clientinactivo = await UserandClientModel.findById(IdCli)
+    if (clientinactivo.usu_estado === 'inactivo') {
+      return res.status(409).json({ error: 'El usuario está inactivo' })
     }
 
     const proupdate = await VentaContadoModel.findByVntId(id)

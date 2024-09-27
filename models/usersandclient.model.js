@@ -279,7 +279,7 @@ const tableadmin = async () => {
  * @param {number} params.id - ID del usuario a actualizar.
  * @returns {Promise<void>} - Una promesa que se resuelve cuando se completa la actualización.
  */
-const inactiveUsers = async ({ state, id }) => {
+const inactiveUsers = async (state, id) => {
   const query = {
     text: `UPDATE USUARIO 
              SET USU_ESTADO = $1 
