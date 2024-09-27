@@ -278,9 +278,10 @@ const tableadmin = async (req, res) => {
   }
 }
 
-const inactiveUsers = async (req, res) => {
+const changestateUsers = async (req, res) => {
   try {
-    const { state, id } = req.body
+    const { state } = req.body
+    const { id } = req.params
 
     // Verifica que los campos obligatorios estén presentes
     if (!id || !state) {
@@ -297,7 +298,15 @@ const inactiveUsers = async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado.' })
     }
 
-    return res.json('Estado cambiado con exito')
+    // Verifica que el estado sea 'activo' o 'inactivo'
+    if (state !== 'activo' && state !== 'inactivo') {
+      return res.status(400).json({ error: 'El estado solo puede ser activo o inactivo.' })
+    }
+
+    // Aquí puedes agregar la lógica para cambiar el estado del usuario
+    await UserandClientModel.inactiveUsers(state, id)
+
+    return res.json('Estado cambiado con éxito')
   } catch (error) {
     console.error(error)
     return res.status(500).json({ error: error.message })
@@ -312,6 +321,6 @@ export const UserandClientController = {
   profile,
   tableclients,
   tableadmin,
-  inactiveUsers
+  changestateUsers
 
 }

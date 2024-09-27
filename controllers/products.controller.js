@@ -1,4 +1,4 @@
-import { ProductsModel } from '../models/products-model.js'
+import { ProductsModel } from '../models/products.model.js'
 import { UserandClientModel } from '../models/usersandclient.model.js'
 import moment from 'moment'
 
@@ -20,8 +20,14 @@ const register = async (req, res) => {
     if (isNaN(price)) {
       return res.status(400).json({ error: 'El precio debe ser valor numerico.' })
     }
+    if (price < 0) {
+      return res.status(409).json({ error: 'El precio no puede ser negativo' })
+    }
     if (isNaN(priceventa)) {
       return res.status(400).json({ error: 'El precio de venta debe ser valor numerico.' })
+    }
+    if (priceventa < 0) {
+      return res.status(409).json({ error: 'precio de venta no puede ser negativo' })
     }
 
     // Busca si la referencia ya existe en la base de datos
@@ -88,10 +94,15 @@ const updateproduct = async (req, res) => {
     if (isNaN(price)) {
       return res.status(400).json({ error: 'El precio debe ser valor numerico.' })
     }
+    if (price < 0) {
+      return res.status(409).json({ error: 'El precio no puede ser negativo' })
+    }
     if (isNaN(priceventa)) {
       return res.status(400).json({ error: 'El precio de venta debe ser valor numerico.' })
     }
-
+    if (priceventa < 0) {
+      return res.status(409).json({ error: 'precio de venta no puede ser negativo' })
+    }
     // Busca el producto actual para obtener su id
     const Productupdate = await ProductsModel.findById(id)
     if (!Productupdate) {
