@@ -127,14 +127,14 @@ const findById = async (id) => {
 
 /**
  * Asigna un rol a un usuario en la base de datos.
- * @param {number} userId - ID del usuario al que se le asignará el rol.
+ * @param {number} id - ID del usuario al que se le asignará el rol.
  * @param {number} roleId - ID del rol que se asignará al usuario.
  * @returns {Promise<Object>} - Datos del rol asignado.
  */
-const RoleasigUser = async (userId, roleId) => {
+const RoleasigUser = async (id, roleId) => {
   const query = {
     text: 'INSERT INTO ROLESUSUARIO (USR_USU_ID, USR_ROL_ID) VALUES ($1, $2)',
-    values: [userId, roleId]
+    values: [id, roleId]
   }
   await db.query(query)
 }
@@ -145,10 +145,10 @@ const RoleasigUser = async (userId, roleId) => {
  * @param {number} roleId - ID del rol que se le verificará al usuario.
  * @returns {Promise<Object|null>} - Datos del rol si existe, o null si no.
  */
-const RoleasigUserOne = async (userId, roleId) => {
+const RoleasigUserOne = async (id, roleId) => {
   const query = {
     text: 'SELECT * FROM ROLESUSUARIO WHERE USR_USU_ID = $1 AND USR_ROL_ID = $2',
-    values: [userId, roleId]
+    values: [id, roleId]
   }
 
   const { rows } = await db.query(query)

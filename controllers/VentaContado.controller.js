@@ -229,19 +229,20 @@ const tableventascnt = async (req, res) => {
       id: vnt.vnt_id,
       cardnum: vnt.vnt_numcarta,
       date: vnt.vnt_fecha,
-      IdCli: vnt.vnt_cli_id,
-      cli_name: vnt.nombrecliente,
-      cli_apellido: vnt.apellidocliente,
-      identificacion: vnt.identificacioncliente,
-      phone: vnt.telefonocliente,
+      IdAdm: vnt.vnt_usu_id,
+      adm_name: vnt.nombreadministrador,
+      adm_last_name: vnt.apellidoadministrador,
       IdPro: vnt.pro_id,
       name_pro: vnt.pro_nombreproducto,
       state: vnt.pro_estado,
       price_sale: vnt.pro_precioventa,
       profit: vnt.pro_ganancia,
-      IdAdm: vnt.vnt_usu_id,
-      adm_name: vnt.nombreadministrador,
-      adm_last_name: vnt.apellidoadministrador
+      IdCli: vnt.vnt_cli_id,
+      cli_name: vnt.nombrecliente,
+      cli_apellido: vnt.apellidocliente,
+      identificacion: vnt.identificacioncliente,
+      phone: vnt.telefonocliente,
+      statecli: vnt.estadocliente
 
     }))
     return res.status(200).json(formattedVntContado)

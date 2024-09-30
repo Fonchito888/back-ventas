@@ -174,18 +174,21 @@ const tablevnt = async () => {
     VNT_ID,
     VNT_NUMCARTA,
     VNT_FECHA,
+    VNT_USU_ID,
+    A.USU_NOMBRE AS nombreadministrador, 
+    A.USU_APELLIDO AS apellidoadministrador,
+    A.USU_ESTADO AS estadoadministrador,
+    PRO_ID,
+    PRO_NOMBREPRODUCTO,
+    PRO_ESTADO,
+    PRO_PRECIOVENTA,
     VNT_CLI_ID,
     C.USU_NOMBRE AS nombrecliente,
     C.USU_APELLIDO AS apellidocliente,
     C.USU_IDENTIFICACION AS identificacioncliente,
     C.USU_TELEFONO AS telefonocliente,
-    PRO_ID,
-    PRO_NOMBREPRODUCTO,
-    PRO_ESTADO,
-    PRO_PRECIOVENTA,
-    VNT_USU_ID,
-    A.USU_NOMBRE AS nombreadministrador, 
-    A.USU_APELLIDO AS apellidoadministrador
+    C.USU_ESTADO AS estadocliente
+
 FROM 
     PRODUCTOS
 JOIN 

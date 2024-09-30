@@ -161,20 +161,30 @@ const update = async ({ cardnum, date, cuotainicial, IdCli, IdPro, id }) => {
   await updatevntcre.query('BEGIN')
 
   try {
+    // Selecciona el VNC_PRO_ID
+    const selectvntcre = {
+      text: 'SELECT VNC_PRO_ID FROM VENTACREDITO WHERE VNC_ID = $1',
+      values: [id]
+    }
+    const { rows: vntCreRows } = await updatevntcre.query(selectvntcre)
+
+    const vncproId = vntCreRows[0].vnc_pro_id
+
+    // Actualiza VENTACREDITO
     const Updatevntcre = {
       text: `UPDATE VENTACREDITO
       SET VNC_NUMCARTA=$1, VNC_FECHA=$2, VNC_CUOTAINICIAL=$3, VNC_CLI_ID=$4,
-      VNC_PRO_ID=$5 WHERE VNC_ID=$6 RETURNING VNC_SALDOINICIAL, VNC_PRO_ID`,
+      VNC_PRO_ID=$5 WHERE VNC_ID=$6 RETURNING VNC_SALDOINICIAL`,
       values: [cardnum, date, cuotainicial, IdCli, IdPro, id]
     }
     const { rows: vntcreRows } = await updatevntcre.query(Updatevntcre)
+
     const vncSaldoInicial = vntcreRows[0].vnc_saldoinicial
-    const vtncreditoidupdate = vntcreRows[0].vnc_pro_id
 
     // Actualiza el estado del producto antiguo
     const updatestatepro = {
       text: 'UPDATE PRODUCTOS SET PRO_ESTADO = \'PE\' WHERE PRO_ID = $1',
-      values: [vtncreditoidupdate]
+      values: [vncproId]
     }
     await updatevntcre.query(updatestatepro)
 
@@ -205,10 +215,50 @@ const update = async ({ cardnum, date, cuotainicial, IdCli, IdPro, id }) => {
     return { cardnum, date, cuotainicial }
   } catch (error) {
     await updatevntcre.query('ROLLBACK')
+    console.error('Error en la actualización:', error)
     throw error
   } finally {
     updatevntcre.release()
   }
+}
+
+const tablevnc = async () => {
+  const query = {
+
+    text: `SELECT VNC_ID,
+    VNC_NUMCARTA,
+    VNC_FECHA,
+    VNC_USU_ID,
+    A.USU_NOMBRE AS nombreadministrador, 
+    A.USU_APELLIDO AS apellidoadministrador,
+    A.USU_ESTADO AS estadoadministrador,
+    PRO_ID,
+    PRO_NOMBREPRODUCTO,
+    PRO_ESTADO,
+    PRO_PRECIOVENTA,
+    VNC_CUOTAINICIAL,
+    VNC_SALDOINICIAL,
+    VNC_ESTADO,
+    VNC_CLI_ID,
+    C.USU_NOMBRE AS nombrecliente,
+    C.USU_APELLIDO AS apellidocliente,
+    C.USU_IDENTIFICACION AS identificacioncliente,
+    C.USU_TELEFONO AS telefonocliente,
+    C.USU_ESTADO AS estadocliente,
+    R.RAB_SALDO
+FROM 
+    PRODUCTOS
+JOIN 
+    VENTACREDITO ON PRO_ID = VNC_PRO_ID
+JOIN 
+    USUARIO AS C ON VNC_CLI_ID = C.USU_ID
+JOIN 
+    USUARIO AS A ON VNC_USU_ID = A.USU_ID
+LEFT JOIN 
+    RESTAR_ABONOS AS R ON R.RAB_VNC_ID = VNC_ID`
+  }
+  const rows = await db.query(query)
+  return rows
 }
 
 export const VentaCreditoModel = {
@@ -217,6 +267,7 @@ export const VentaCreditoModel = {
   findByVCreId,
   deletevnccre,
   update,
-  findByProVCreId
+  findByProVCreId,
+  tablevnc
 
 }

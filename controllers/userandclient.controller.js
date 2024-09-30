@@ -147,12 +147,13 @@ const unrelatedrol = async (req, res) => {
 }
 
 const asigrol = async (req, res) => {
-  const { userId, roleId } = req.body
+  const { roleId } = req.body
+  const { id } = req.params
 
-  if (!userId || !roleId) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios: userId y roleId.' })
+  if (!roleId) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios: roleId.' })
   }
-  if (isNaN(userId)) {
+  if (isNaN(id)) {
     return res.status(400).json({ error: 'El ID del usuario no es válido.' })
   }
   if (isNaN(roleId)) {
@@ -160,7 +161,7 @@ const asigrol = async (req, res) => {
   }
 
   // Verifica si el usuario existe
-  const user = await UserandClientModel.findOneUserId(userId)
+  const user = await UserandClientModel.findOneUserId(id)
   if (!user) {
     return res.status(404).json({ error: 'Usuario no encontrado.' })
   }
@@ -170,13 +171,13 @@ const asigrol = async (req, res) => {
     return res.status(404).json({ error: 'Rol no encontrado.' })
   }
 
-  const existingrolanduser = await UserandClientModel.RoleasigUserOne(userId, roleId)
+  const existingrolanduser = await UserandClientModel.RoleasigUserOne(id, roleId)
   if (existingrolanduser) {
     return res.status(409).json({ error: 'El usuario ya tiene este rol' })
   }
 
   try {
-    UserandClientModel.RoleasigUser(userId, roleId)
+    UserandClientModel.RoleasigUser(id, roleId)
     return res.status(201).json({ message: 'Rol asignado al usuario exitosamente.' })
   } catch (error) {
     console.error('Error al asignar rol al usuario:', error.message)

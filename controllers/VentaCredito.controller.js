@@ -1,3 +1,4 @@
+import { AbonosModel } from '../models/abonos.model.js'
 import { ProductsModel } from '../models/products.model.js'
 import { UserandClientModel } from '../models/usersandclient.model.js'
 import { VentaCreditoModel } from '../models/VentaCredito.model.js'
@@ -117,6 +118,12 @@ const deleteventa = async (req, res) => {
       return res.status(404).json({ error: 'Venta de crédito no encontrada.' })
     }
 
+    // Verificar si hay abonos asociados
+    const abnum = await AbonosModel.findBynumabnId(id)
+    if (abnum.count >= 2) {
+      return res.status(409).json({ error: 'No se puede eliminar la venta de crédito porque hay mas de 1 abono asociado.' })
+    }
+
     // Elimina la venta de crédito
     const deleteVenta = await VentaCreditoModel.deletevnccre(id)
 
@@ -222,6 +229,11 @@ const updatevntcre = async (req, res) => {
     if (cuotainicial < 0) {
       return res.status(409).json({ error: 'Cuota inicial no puede ser negativa' })
     }
+    // Verificar si hay abonos asociados
+    const abnum = await AbonosModel.findBynumabnId(id)
+    if (abnum.count >= 2) {
+      return res.status(409).json({ error: 'No se puede editar la venta de crédito porque hay mas de 1 abono asociado.' })
+    }
 
     // Actualiza la venta de crédito con los nuevos datos
     await VentaCreditoModel.update({
@@ -241,8 +253,50 @@ const updatevntcre = async (req, res) => {
   }
 }
 
+const tableventascre = async (req, res) => {
+  try {
+    // Ejecuta la consulta para obtener las ventas de crédito
+    const result = await VentaCreditoModel.tablevnc()
+    const vntcnt = result.rows
+
+    // Mapea los resultados para formatear la respuesta
+    const formattedVntCredito = vntcnt.map(vnt => ({
+      id: vnt.vnc_id,
+      cardnum: vnt.vnc_numcarta,
+      date: vnt.vnc_fecha,
+      IdAdm: vnt.vnc_usu_id,
+      adm_name: vnt.nombreadministrador,
+      adm_last_name: vnt.apellidoadministrador,
+      adm_state: vnt.estadoadministrador,
+      IdPro: vnt.pro_id,
+      name_pro: vnt.pro_nombreproducto,
+      state: vnt.pro_estado,
+      price_sale: vnt.pro_precioventa,
+      initial_cuota: vnt.vnc_cuotainicial,
+      initial_saldo: vnt.vnc_saldoinicial,
+      saldo_restante: vnt.rab_saldo,
+      state_credit: vnt.vnc_estado,
+      IdCli: vnt.vnc_cli_id,
+      cli_name: vnt.nombrecliente,
+      cli_last_name: vnt.apellidocliente,
+      identification: vnt.identificacioncliente,
+      phone: vnt.telefonocliente,
+      statecli: vnt.estadocliente
+
+    }))
+
+    // Devuelve la respuesta formateada con un estado 200 (OK)
+    return res.status(200).json(formattedVntCredito)
+  } catch (error) {
+    // Captura cualquier error y devuelve un estado 500 (Error interno del servidor)
+    console.error(error)
+    return res.status(500).json({ error: error.message })
+  }
+}
+
 export const VentaCreditoController = {
   register,
   deleteventa,
-  updatevntcre
+  updatevntcre,
+  tableventascre
 }
