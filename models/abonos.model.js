@@ -49,6 +49,12 @@ const create = async ({ abnvalor, date, id, IdAdm }) => {
         values: ['finalizado', id]
       }
       await abnreg.query(updatevntcre)
+
+      const updatepro = {
+        text: 'UPDATE PRODUCTOS SET PRO_ESTADO = $1 WHERE PRO_ID = $2',
+        values: ['F', IdPro]
+      }
+      await abnreg.query(updatepro)
     }
 
     // Inserta el nuevo abono
@@ -99,8 +105,39 @@ const findByrestabnId = async (id) => {
   return rows[0]
 }
 
+const tableabono = async (id) => {
+  const query = {
+    text: `SELECT
+    C.USU_NOMBRE AS NOMBRECLIENTE,
+    C.USU_APELLIDO AS APELLIDOCLIENTE,
+    C.USU_IDENTIFICACION AS IDENTIFICACIONCLIENTE,
+    PRO_NOMBREPRODUCTO,
+    ABN_NUMABONO,
+    ABN_VALOR,
+    ABN_SALDO_ANTERIOR,
+    A.USU_NOMBRE AS NOMBREADMINISTRADOR,
+    A.USU_APELLIDO AS APELLIDOADMINISTRADOR,
+    A.USU_IDENTIFICACION AS IDENTIFICACIONADMINISTRADOR
+    FROM
+    ABONOS
+    INNER JOIN VENTACREDITO ON VNC_ID = ABN_VNC_ID
+    INNER JOIN RESTAR_ABONOS ON RAB_ID = ABN_RAB_ID
+    INNER JOIN PRODUCTOS ON PRO_ID = ABN_PRO_ID
+    INNER JOIN USUARIO AS C ON ABN_CLI_ID = C.USU_ID
+    INNER JOIN USUARIO AS A ON ABN_USU_ID = A.USU_ID
+    WHERE
+    VNC_ID = $1
+    ORDER BY
+    ABN_NUMABONO ASC`,
+    values: [id]
+  }
+  const rows = await db.query(query)
+  return rows
+}
+
 export const AbonosModel = {
   create,
   findByrestabnId,
-  findBynumabnId
+  findBynumabnId,
+  tableabono
 }

@@ -24,7 +24,7 @@ const create = async ({ cardnum, date, IdCli, IdPro, IdAdm }) => {
     const vntcontadoId = vntRows[0].vnt_pro_id
 
     const insertnewstatepro = {
-      text: 'UPDATE PRODUCTOS SET PRO_ESTADO = \'E\' WHERE PRO_ID = $1',
+      text: 'UPDATE PRODUCTOS SET PRO_ESTADO = \'F\' WHERE PRO_ID = $1',
       values: [vntcontadoId]
     }
     await vntcontado.query(insertnewstatepro)
@@ -55,21 +55,6 @@ const findByIdnumcard = async (cardnum) => {
 }
 
 /**
- * Busca una venta al contado por el ID del producto.
- * @param {number} id - ID del producto.
- * @returns {Promise<Object|null>} - Detalles de la venta o null si no se encuentra.
- */
-const findByProVCId = async (id) => {
-  const query = {
-    text: 'SELECT * FROM VENTACONTADO WHERE VNT_PRO_ID = $1',
-    values: [id]
-
-  }
-  const { rows } = await db.query(query)
-  return rows[0] || null
-}
-
-/**
  * Busca una venta al contado por el ID de la venta.
  * @param {number} id - ID de la venta.
  * @returns {Promise<Object|null>} - Detalles de la venta o null si no se encuentra.
@@ -85,8 +70,49 @@ const findByVntId = async (id) => {
 }
 
 /**
- * Elimina una venta al contado por el ID del producto.
- * @param {number} id - ID del producto asociado a la venta.
+ * Busca una venta al contado por el ID
+ * @param {number} id - ID de la venta.
+ * @returns {Promise<Object|null>} - Detalles de la venta o null si no se encuentra.
+ */
+const findByProVCId = async (id) => {
+  const query = {
+    text: 'SELECT * FROM VENTACONTADO WHERE VNT_ID = $1',
+    values: [id]
+
+  }
+  const { rows } = await db.query(query)
+  return rows[0] || null
+}
+
+// Método en VentaContadoModel
+const findContbyproId = async (productId, excludeId) => {
+  // Prepara la consulta SQL para buscar en la tabla VENTACONTADO
+  const query = {
+    text: 'SELECT * FROM VENTACONTADO WHERE VNT_PRO_ID = $1 AND VNT_ID <> $2', // $2 es el ID de la venta que estamos editando, asegura que no se incluya en los resultados
+    values: [productId, excludeId]
+  }
+
+  // Ejecuta la consulta en la base de datos y almacena el resultado
+  const result = await db.query(query)
+
+  // Devuelve el primer registro encontrado si hay alguna coincidencia,
+  // o null si no hay ventas activas asociadas al producto que no sean la venta actual.
+  return result.rows.length > 0 ? result.rows[0] : null
+}
+
+const findCredbyproId = async (productId) => {
+  const query = {
+    text: 'SELECT * FROM VENTACREDITO WHERE VNC_PRO_ID = $1',
+    values: [productId]
+  }
+
+  const result = await db.query(query)
+  return result.rows.length > 0 ? result.rows[0] : null // Retorna la primera venta activa si existe
+}
+
+/**
+ * Elimina una venta al contado
+ * @param {number} id - ID de la venta.
  * @returns {Promise<Object>} - Detalles de la venta eliminada.
  */
 const deletevntcont = async (id) => {
@@ -94,15 +120,28 @@ const deletevntcont = async (id) => {
   await vntcontado.query('BEGIN')
 
   try {
-    const Deletevntcont = {
-      text: 'DELETE FROM VENTACONTADO WHERE VNT_PRO_ID = $1 RETURNING VNT_PRO_ID',
+    const selectvntcont = {
+      text: 'SELECT * FROM VENTACONTADO WHERE VNT_ID = $1',
       values: [id]
     }
-    const { rows: vntRows } = await vntcontado.query(Deletevntcont)
-    const vntcontadoId = vntRows[0].vnt_pro_id
+
+    const { rows: vntcontRows } = await vntcontado.query(selectvntcont)
+
+    if (vntcontRows.length === 0) {
+      throw new Error('VENTACONTADO not found')
+    }
+
+    const vncontproId = vntcontRows[0].vnt_pro_id
+
+    const Deletevntcont = {
+      text: 'DELETE FROM VENTACONTADO WHERE VNT_ID = $1 RETURNING VNT_PRO_ID',
+      values: [id]
+    }
+    await vntcontado.query(Deletevntcont)
+
     const changeprostate = {
       text: 'UPDATE PRODUCTOS SET PRO_ESTADO = \'PE\' WHERE PRO_ID = $1',
-      values: [vntcontadoId]
+      values: [vncontproId]
     }
     await vntcontado.query(changeprostate)
     await vntcontado.query('COMMIT')
@@ -133,27 +172,32 @@ const update = async ({ cardnum, date, IdCli, IdPro, id }) => {
   await vtnupdatecontado.query('BEGIN')
 
   try {
+    const selectvntcon = {
+      text: 'SELECT VNT_PRO_ID FROM VENTACONTADO WHERE VNT_ID = $1',
+      values: [id]
+    }
+    const { rows: vntRows } = await vtnupdatecontado.query(selectvntcon)
+    const vntcontadoid = vntRows[0].vnt_pro_id
+
     const updatevtncont = {
       text: `UPDATE VENTACONTADO
              SET VNT_NUMCARTA = $1, VNT_FECHA = $2, VNT_CLI_ID = $3, VNT_PRO_ID = $4 
-             WHERE VNT_ID = $5
-             RETURNING VNT_PRO_ID`,
+             WHERE VNT_ID = $5`,
       values: [cardnum, date, IdCli, IdPro, id]
     }
 
-    const { rows: vtnupRows } = await vtnupdatecontado.query(updatevtncont)
-    const vtncontadoidupdate = vtnupRows[0].vnt_pro_id
+    await vtnupdatecontado.query(updatevtncont)
 
-    // Actualizar el estado del producto correspondiente a vtncontadoidupdate a 'E'
+    // Actualizar el estado del producto correspondiente a vtncontadoidupdate a 'F'
     const updatestatepro = {
-      text: 'UPDATE PRODUCTOS SET PRO_ESTADO = \'E\' WHERE PRO_ID = $1',
-      values: [vtncontadoidupdate]
+      text: 'UPDATE PRODUCTOS SET PRO_ESTADO = \'PE\' WHERE PRO_ID = $1',
+      values: [vntcontadoid]
     }
     await vtnupdatecontado.query(updatestatepro)
 
     // Actualizar el estado del producto correspondiente a IdPro a 'PE'
     const updatestateproIdPro = {
-      text: 'UPDATE PRODUCTOS SET PRO_ESTADO = \'PE\' WHERE PRO_ID = $1',
+      text: 'UPDATE PRODUCTOS SET PRO_ESTADO = \'F\' WHERE PRO_ID = $1',
       values: [IdPro]
     }
     await vtnupdatecontado.query(updatestateproIdPro)
@@ -209,6 +253,8 @@ export const VentaContadoModel = {
   findByProVCId,
   findByVntId,
   update,
-  tablevnt
+  tablevnt,
+  findContbyproId,
+  findCredbyproId
 
 }

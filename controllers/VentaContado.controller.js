@@ -66,7 +66,11 @@ const register = async (req, res) => {
 
     // Verifica si el producto ya ha sido entregado
     if (product.pro_estado === 'E') {
-      return res.status(409).json({ error: 'El producto ya ha sido entregado' })
+      return res.status(409).json({ error: 'El producto ya ha sido entregado a una venta credito' })
+    }
+    // Verifica si el producto ya ha finalizado
+    if (product.pro_estado === 'F') {
+      return res.status(409).json({ error: 'El producto ya ha finalizado' })
     }
 
     // Obtiene el ID del administrador desde el token del usuario
@@ -106,7 +110,7 @@ const deleteventa = async (req, res) => {
     // Busca la venta al contado por ID
     const ventaContado = await VentaContadoModel.findByProVCId(id)
     if (!ventaContado) {
-      return res.status(404).json({ error: 'Venta de contado por producto no encontrada.' })
+      return res.status(404).json({ error: 'Venta de contado no encontrada.' })
     }
 
     // Elimina la venta al contado
@@ -190,13 +194,16 @@ const updatevntcnt = async (req, res) => {
       return res.status(409).json({ error: 'El usuario está inactivo' })
     }
 
-    const proupdate = await VentaContadoModel.findByVntId(id)
-    // Verifica si el producto ya ha sido entregado
-    if (proupdate.vnt_pro_id !== IdPro.toString()) {
-      const numpro = await VentaContadoModel.findByProVCId(IdPro)
-      if (numpro) {
-        return res.status(409).json({ error: 'El producto ya ha sido entregado' })
-      }
+    // Verifica si el producto ya está asignado a otra venta de contado
+    const existingSale = await VentaContadoModel.findContbyproId(IdPro, id)
+    if (existingSale) {
+      return res.status(409).json({ error: 'El producto ya está asignado a otra venta de contado' })
+    }
+
+    // Verifica si el producto está vinculado a una venta de crédito finalizada
+    const existingCreditSale = await VentaContadoModel.findCredbyproId(IdPro)
+    if (existingCreditSale) {
+      return res.status(409).json({ error: 'El producto está vinculado a una venta de crédito' })
     }
 
     // Valida que las fechas proporcionadas sean correctas en formato ISO 8601.

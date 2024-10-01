@@ -1,6 +1,15 @@
 import { AbonosModel } from '../models/abonos.model.js'
 import { UserandClientModel } from '../models/usersandclient.model.js'
 import { VentaCreditoModel } from '../models/VentaCredito.model.js'
+import moment from 'moment'
+
+// Función para validar que la fecha proporcionada sea válida en formato ISO 8601.
+
+const isValidDate = (date) => {
+  return moment(date, moment.ISO_8601, true).isValid()
+}
+
+// Función para registrar un nuevo abono a una venta de crédito
 
 const register = async (req, res) => {
   try {
@@ -41,6 +50,11 @@ const register = async (req, res) => {
       return res.status(409).json({ error: 'La venta de crédito ha finalizado.' })
     }
 
+    // Valida que las fechas proporcionadas sean correctas en formato ISO 8601.
+    if (!isValidDate(date)) {
+      return res.status(400).json({ error: 'La fecha no tiene un formato válido.' })
+    }
+
     // Obtiene el abono relacionado con el ID de la venta de crédito
     const abn = await AbonosModel.findByrestabnId(id)
 
@@ -71,6 +85,45 @@ const register = async (req, res) => {
   }
 }
 
+const tableabonos = async (req, res) => {
+  const { id } = req.params
+
+  try {
+    // Validar el userId
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'El ID de la venta no es válido.' })
+    }
+    // Verifica que la venta de crédito con el ID proporcionado exista
+    const ventaCredito = await VentaCreditoModel.findByVCreId(id)
+    if (!ventaCredito) {
+      return res.status(404).json({ error: 'Venta de crédito no encontrada.' })
+    }
+    const result = await AbonosModel.tableabono(id)
+    const abonos = result.rows
+
+    const formattedAbonos = abonos.map(abn => ({
+      cli_name: abn.nombrecliente,
+      cli_last_name: abn.apellidocliente,
+      identification: abn.identificacioncliente,
+      name_pro: abn.pro_nombreproducto,
+      num_abono: abn.abn_numabono,
+      abono: abn.abn_valor,
+      saldo: abn.abn_saldo_anterior,
+      adm_name: abn.nombreadministrador,
+      adm_last_name: abn.apellidoadministrador,
+      adm_identificacion: abn.identificacionadministrador
+
+    }))
+    // Devuelve la lista de abonos con un estado 200 (OK)
+    return res.status(200).json(formattedAbonos)
+  } catch (error) {
+    // Captura cualquier error y devuelve un estado 500 (Error interno del servidor)
+    console.error(error)
+    return res.status(500).json({ error: error.message })
+  }
+}
+
 export const AbonosController = {
-  register
+  register,
+  tableabonos
 }

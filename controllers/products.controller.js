@@ -120,9 +120,13 @@ const updateproduct = async (req, res) => {
     // Verificar si ya ha sido entregado el producto
     const productentregado = await ProductsModel.findById(id)
     if (productentregado.pro_estado === 'E') {
-      return res.status(409).json({ error: 'El producto ya ha sido entregado' })
+      return res.status(409).json({ error: 'El producto ya ha sido entregado a una venta credito' })
     }
-
+    // Verificar si ya ha sido finalizado el producto
+    const productfinalizado = await ProductsModel.findById(id)
+    if (productfinalizado.pro_estado === 'F') {
+      return res.status(409).json({ error: 'El producto ya ha finalizado' })
+    }
     // Valida que las fechas proporcionadas sean correctas en formato ISO 8601.
     if (!isValidDate(date)) {
       return res.status(400).json({ error: 'La fecha no tiene un formato válido.' })

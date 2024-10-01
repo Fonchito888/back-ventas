@@ -72,6 +72,10 @@ const register = async (req, res) => {
     if (product.pro_estado === 'E') {
       return res.status(409).json({ error: 'El producto ya ha sido entregado' })
     }
+    // Verifica si el producto ya ha sido entregado
+    if (product.pro_estado === 'F') {
+      return res.status(409).json({ error: 'El producto ya ha finalizado' })
+    }
 
     // Valida que la cuota inicial no sea mayor que el precio del producto y no sea negativa
     if (cuotainicial > product.pro_precioventa) {
@@ -206,13 +210,16 @@ const updatevntcre = async (req, res) => {
       return res.status(409).json({ error: 'El usuario está inactivo' })
     }
 
-    // Verifica si el producto ya ha sido entregado
-    const proupdate = await VentaCreditoModel.findByVCreId(id)
-    if (proupdate.vnc_pro_id !== IdPro.toString()) {
-      const numpro = await VentaCreditoModel.findByProVCreId(IdPro)
-      if (numpro) {
-        return res.status(409).json({ error: 'El producto ya ha sido entregado' })
-      }
+    // Verifica si el producto ya está asignado a otra venta de credito
+    const existingSale = await VentaCreditoModel.findCredtbyproId(IdPro, id)
+    if (existingSale) {
+      return res.status(409).json({ error: 'El producto ya está asignado a otra venta de credito' })
+    }
+
+    // Verifica si el producto está vinculado a una venta de credito
+    const existingCreditSale = await VentaCreditoModel.findConbyproId(IdPro)
+    if (existingCreditSale) {
+      return res.status(409).json({ error: 'El producto está vinculado a una venta de contado' })
     }
 
     // Valida que la fecha tenga un formato válido
@@ -274,7 +281,7 @@ const tableventascre = async (req, res) => {
       price_sale: vnt.pro_precioventa,
       initial_cuota: vnt.vnc_cuotainicial,
       initial_saldo: vnt.vnc_saldoinicial,
-      saldo_restante: vnt.rab_saldo,
+      saldo_restante: vnt.saldorestante,
       state_credit: vnt.vnc_estado,
       IdCli: vnt.vnc_cli_id,
       cli_name: vnt.nombrecliente,

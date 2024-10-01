@@ -87,6 +87,31 @@ const findByProVCreId = async (id) => {
   return rows[0] || null
 }
 
+// Método en VentaCreditoModel
+const findCredtbyproId = async (productId, excludeId) => {
+  // Prepara la consulta SQL para buscar en la tabla VENTACREDITO
+  const query = {
+    text: 'SELECT * FROM VENTACREDITO WHERE VNC_PRO_ID = $1 AND VNC_ID <> $2', // $2 es el ID de la venta que estamos editando, asegura que no se incluya en los resultados
+    values: [productId, excludeId]
+  }
+
+  // Ejecuta la consulta en la base de datos y almacena el resultado
+  const result = await db.query(query)
+
+  // Devuelve el primer registro encontrado si hay alguna coincidencia,
+  // o null si no hay ventas activas asociadas al producto que no sean la venta actual.
+  return result.rows.length > 0 ? result.rows[0] : null
+}
+
+const findConbyproId = async (productId) => {
+  const query = {
+    text: 'SELECT * FROM VENTACONTADO WHERE VNT_PRO_ID = $1',
+    values: [productId]
+  }
+
+  const result = await db.query(query)
+  return result.rows.length > 0 ? result.rows[0] : null // Retorna la primera venta activa si existe
+}
 /**
  * Busca una venta de crédito por el ID.
  * @param {number} id - ID de la venta.
@@ -245,7 +270,7 @@ const tablevnc = async () => {
     C.USU_IDENTIFICACION AS identificacioncliente,
     C.USU_TELEFONO AS telefonocliente,
     C.USU_ESTADO AS estadocliente,
-    R.RAB_SALDO
+    R.RAB_SALDO  AS saldorestante
 FROM 
     PRODUCTOS
 JOIN 
@@ -268,6 +293,8 @@ export const VentaCreditoModel = {
   deletevnccre,
   update,
   findByProVCreId,
-  tablevnc
+  tablevnc,
+  findCredtbyproId,
+  findConbyproId
 
 }
