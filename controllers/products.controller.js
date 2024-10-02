@@ -43,6 +43,24 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'La fecha no tiene un formato válido.' })
     }
 
+    // Convierte la fecha a un objeto Date para las comparaciones
+    const fecha = new Date(date)
+    const fechaLimite = new Date('1900-01-01')
+    const hoy = new Date()
+
+    // Ajusta la fecha de hoy para que tenga la misma hora, minutos y segundos
+    hoy.setHours(0, 0, 0, 0)
+
+    // Verifica que la fecha no sea posterior a la fecha actual
+    if (fecha > hoy) {
+      return res.status(400).json({ error: 'La fecha no puede ser posterior a la fecha actual.' })
+    }
+
+    // Verifica que la fecha no sea anterior a 1900
+    if (fecha < fechaLimite) {
+      return res.status(400).json({ error: 'La fecha no puede ser anterior a 1900.' })
+    }
+
     // Obtiene el ID del usuario desde la solicitud
     const userid = req.username
     // Busca el usuario en la base de datos
@@ -130,6 +148,24 @@ const updateproduct = async (req, res) => {
     // Valida que las fechas proporcionadas sean correctas en formato ISO 8601.
     if (!isValidDate(date)) {
       return res.status(400).json({ error: 'La fecha no tiene un formato válido.' })
+    }
+
+    // Convierte la fecha a un objeto Date para las comparaciones
+    const fecha = new Date(date)
+    const fechaLimite = new Date('1900-01-01')
+    const hoy = new Date()
+
+    // Ajusta la fecha de hoy para que tenga la misma hora, minutos y segundos
+    hoy.setHours(0, 0, 0, 0)
+
+    // Verifica que la fecha no sea posterior a la fecha actual
+    if (fecha > hoy) {
+      return res.status(400).json({ error: 'La fecha no puede ser posterior a la fecha actual.' })
+    }
+
+    // Verifica que la fecha no sea anterior a 1900
+    if (fecha < fechaLimite) {
+      return res.status(400).json({ error: 'La fecha no puede ser anterior a 1900.' })
     }
 
     // Actualiza el producto en la base de datos
