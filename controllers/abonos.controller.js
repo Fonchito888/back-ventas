@@ -123,7 +123,75 @@ const tableabonos = async (req, res) => {
   }
 }
 
+const updateabn = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { abnvalor, date, numabn } = req.body
+
+    if (!abnvalor || !date || !numabn) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios: valor de abono, fecha, número de abono.' })
+    }
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'El ID de la venta no es válido.' })
+    }
+    if (isNaN(abnvalor) || isNaN(numabn)) {
+      return res.status(400).json({ error: 'El valor de abono o número de abono no es un número.' })
+    }
+    if (abnvalor <= 0 || numabn <= 0) {
+      return res.status(409).json({ error: 'El valor de abono y número de abono deben ser positivos.' })
+    }
+    const ventaCredito = await VentaCreditoModel.findByVCreId(id)
+    if (!ventaCredito) {
+      return res.status(404).json({ error: 'Venta de crédito no encontrada.' })
+    }
+    // Valida que las fechas proporcionadas sean correctas en formato ISO 8601.
+    if (!isValidDate(date)) {
+      return res.status(400).json({ error: 'La fecha no tiene un formato válido.' })
+    }
+    const statevntcre = await VentaCreditoModel.findByVCreId(id)
+    if (statevntcre.vnc_estado === 'finalizado') {
+      return res.status(409).json({ error: 'La venta de crédito ha finalizado.' })
+    }
+
+    // Obtiene el abono relacionado con el ID de la venta de crédito accediendo al num de abono anterior
+    const abn = await AbonosModel.findBynumabnIdant(id)
+
+    // Verifica que el valor del abono no sea mayor que el saldo disponible
+    if (abnvalor > abn.abn_saldo_anterior) {
+      return res.status(409).json({ error: 'Valor del abono no puede ser mayor al valor del saldo' })
+    }
+
+    const abnnum = await AbonosModel.findBynumabnId(id) //  devolverá solo el número de abono
+
+    // Comprobar si se intenta editar el abono 1
+    if (numabn === 1) {
+      return res.status(409).json({ error: 'No se puede editar el abono 1, por favor borrar o modificar la venta crédito' })
+    }
+
+    // Comprobar si abnnum es diferente a numabn
+    if (abnnum.abn_numabono !== numabn) {
+      return res.status(409).json({ error: 'Solo se puede editar el último abono hecho, por favor verificar existencia' })
+    }
+
+    // Actualiza el abono en la base de datos
+    const ABNupdate = await AbonosModel.updateabn({
+      id,
+      abnvalor,
+      date,
+      numabn
+    })
+
+    // Devuelve el abono actualizado con un estado 200 (OK)
+    return res.status(200).json(ABNupdate)
+  } catch (error) {
+    // Captura cualquier error y devuelve un estado 500 (Error interno del servidor)
+    console.error(error)
+    return res.status(500).json({ error: error.message })
+  }
+}
+
 export const AbonosController = {
   register,
-  tableabonos
+  tableabonos,
+  updateabn
 }

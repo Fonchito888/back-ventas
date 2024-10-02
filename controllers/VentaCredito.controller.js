@@ -124,7 +124,7 @@ const deleteventa = async (req, res) => {
 
     // Verificar si hay abonos asociados
     const abnum = await AbonosModel.findBynumabnId(id)
-    if (abnum.count >= 2) {
+    if (abnum.abn_numabono >= 2) {
       return res.status(409).json({ error: 'No se puede eliminar la venta de crédito porque hay mas de 1 abono asociado.' })
     }
 
@@ -238,7 +238,7 @@ const updatevntcre = async (req, res) => {
     }
     // Verificar si hay abonos asociados
     const abnum = await AbonosModel.findBynumabnId(id)
-    if (abnum.count >= 2) {
+    if (abnum.abn_numabono >= 2) {
       return res.status(409).json({ error: 'No se puede editar la venta de crédito porque hay mas de 1 abono asociado.' })
     }
 
