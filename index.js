@@ -18,7 +18,7 @@ app.listen(PORT, () => console.log('Server running port ' + PORT))
 app.get('/', (req, res) => {
   // Envía un "OK" como respuesta
 
-  res.send('OK DEVELOPERS')
+  res.send('OK PRODUCTION')
 })
 app.post('/login', async (req, res) => {
   try {
