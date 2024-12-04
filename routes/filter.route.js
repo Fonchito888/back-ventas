@@ -4,14 +4,14 @@ import { FilterController } from '../controllers/filter.controller.js'
 const router = new Router()
 
 // ---------------------------------------------------------------FILTRO PRODUCTOS----------------------------------------------------------------------
-router.get('/productgastos', FilterController.filterproductsgasto)
-router.get('/productgains', FilterController.filterproducts)
-router.get('/productgainsbystate', FilterController.filterproductsbystate)
+router.post('/productgastos', FilterController.filterproductsgasto)
+router.post('/productgains', FilterController.filterproducts)
+router.post('/productgainsbystate', FilterController.filterproductsbystate)
 
 // ---------------------------------------------------------------FILTRO VENTACONTADO----------------------------------------------------------------------
-router.get('/ventascont', FilterController.filtervntcont)
+router.post('/ventascont', FilterController.filtervntcont)
 
 // ---------------------------------------------------------------FILTRO VENTACREDITO----------------------------------------------------------------------
-router.get('/ventascre', FilterController.filtervntcre)
+router.post('/ventascre', FilterController.filtervntcre)
 
 export const RouteFilter = router
